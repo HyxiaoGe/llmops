@@ -1,10 +1,10 @@
-import os
 import uuid
 from dataclasses import dataclass
 
-from flask import request
 from injector import inject
-from openai import OpenAI
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_openai import ChatOpenAI
 
 from internal.schema.app_schema import CompletionRequestForm
 from internal.service import AppService
@@ -41,15 +41,14 @@ class AppHandler:
         if not req.validate():
             return {"error": req.errors}
 
-        query = request.json.get("query")
-        client = OpenAI(base_url=os.getenv("OPENAI_BASE_URL"))
-        completion = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "你是一个OpenAI开发的聊天机器人，请根据用户的输入回复对应的信息"},
-                {"role": "user", "content": query}
-            ]
-        )
-        content = completion.choices[0].message.content
+        prompt = ChatPromptTemplate.from_template("{query}")
+
+        llm = ChatOpenAI(model_name="gpt-4o-mini")
+
+        ai_message = llm.invoke(prompt.invoke({"query": req.query.data}))
+
+        parser = StrOutputParser()
+
+        content = parser.invoke(ai_message)
 
         return success_json({"content": content})
