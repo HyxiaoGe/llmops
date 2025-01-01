@@ -36,7 +36,7 @@ class AppHandler:
     def ping(self):
         return {"ping": "pong"}
 
-    def completion(self):
+    def debug(self, app_id: uuid.UUID):
         req = CompletionRequestForm()
         if not req.validate():
             return {"error": req.errors}
