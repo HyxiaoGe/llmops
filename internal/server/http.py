@@ -1,6 +1,7 @@
 import os
 
 from flask import Flask
+from flask_cors import CORS
 from flask_migrate import Migrate
 
 from config import Config
@@ -26,6 +27,8 @@ class Http(Flask):
         # 4.初始化flask扩展
         db.init_app(self)
         migrate.init_app(self, db, directory="internal/migration")
+
+        CORS(self, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
         # 5.注册应用路由
         router.register_router(self)
