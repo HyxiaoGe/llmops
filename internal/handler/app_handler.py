@@ -1,14 +1,23 @@
+import os
 import uuid
 from dataclasses import dataclass
+from operator import itemgetter
 
 from injector import inject
+from langchain.memory import ConversationBufferWindowMemory
+from langchain_community.chat_message_histories import FileChatMessageHistory
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.runnables import RunnablePassthrough, RunnableLambda
 from langchain_openai import ChatOpenAI
 
 from internal.schema.app_schema import CompletionRequestForm
 from internal.service import AppService
 from pkg.response import success_json, success_message
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+storage_path = os.path.join(BASE_DIR, "storage", "memory")
+os.makedirs(storage_path, exist_ok=True)
 
 
 @inject
@@ -41,14 +50,32 @@ class AppHandler:
         if not req.validate():
             return {"error": req.errors}
 
-        prompt = ChatPromptTemplate.from_template("{query}")
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", "你是一个强大的聊天机器人，能根据用户的提问回复对应的问题"),
+            MessagesPlaceholder("history"),
+            ("human", "{query}")
+        ])
+
+        storage_path = "./storage/memory"
+        os.makedirs(storage_path, exist_ok=True)
+
+        memory = ConversationBufferWindowMemory(
+            k=3,
+            input_key="query",
+            output_key="output",
+            return_messages=True,
+            chat_memory=FileChatMessageHistory(os.path.join(storage_path, "chat_history.txt"))
+        )
 
         llm = ChatOpenAI(model_name="gpt-4o-mini")
 
-        ai_message = llm.invoke(prompt.invoke({"query": req.query.data}))
+        chain = RunnablePassthrough.assign(
+            history=RunnableLambda(memory.load_memory_variables) | itemgetter(
+                "history")) | prompt | llm | StrOutputParser()
 
-        parser = StrOutputParser()
+        chain_input = {"query": req.query.data}
+        content = chain.invoke(chain_input)
 
-        content = parser.invoke(ai_message)
+        memory.save_context(chain_input, {"output": content})
 
         return success_json({"content": content})
