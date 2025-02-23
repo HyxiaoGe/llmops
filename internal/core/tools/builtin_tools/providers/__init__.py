@@ -1,3 +1,3 @@
-from .provider_factory import ProviderEntity
+from .builtin_provider_manager import BuiltinProviderManager
 
-__all__ = ["ProviderEntity"]
+__all__ = ["BuiltinProviderManager"]

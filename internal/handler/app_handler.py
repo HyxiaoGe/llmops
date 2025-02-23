@@ -14,7 +14,6 @@ from langchain_core.runnables import RunnablePassthrough, RunnableLambda, Runnab
 from langchain_core.tracers import Run
 from langchain_openai import ChatOpenAI
 
-from internal.core.tools.builtin_tools.providers.provider_factory import ProviderFactory
 from internal.schema.app_schema import CompletionRequestForm
 from internal.service import AppService
 from pkg.response import success_json, success_message
@@ -29,7 +28,6 @@ os.makedirs(storage_path, exist_ok=True)
 class AppHandler:
     """应用控制器"""
     app_service: AppService
-    provider_factory: ProviderFactory
 
     def create_app(self):
         app = self.app_service.create_app()
@@ -48,9 +46,13 @@ class AppHandler:
         return success_message(f"应用已经成功删除，id为:{app.id}")
 
     def ping(self):
-        google_serper_func = self.provider_factory.get_tool("google", "google_serper")
-        google_serper_tool = google_serper_func()  # 调用函数获取工具实例
-        return success_json(google_serper_tool.invoke("2024年奥运会在哪里举办"))
+        # google_serper_func = self.provider_factory.get_tool("google", "google_serper")
+        # google_serper_tool = google_serper_func()  # 调用函数获取工具实例
+        # google = self.provider_factory.get_provider("google")
+        # google_serper_entity = google.get_tool_entity("google_serper")
+        # providers = self.provider_factory.get_provider_entities()
+        # return success_json({"providers": [provider.dict() for provider in providers]})
+        return success_json()
 
     @classmethod
     def _load_memory_variables(cls, input: Dict[str, Any], config: RunnableConfig) -> Dict[str, Any]:

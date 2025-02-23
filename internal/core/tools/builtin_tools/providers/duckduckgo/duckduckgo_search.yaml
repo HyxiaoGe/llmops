@@ -1,0 +1,4 @@
+name: duckduckgo_search
+label: DuckDuckGo 搜索
+description: 使用 DuckDuckGo 搜索引擎搜索内容
+params: [ ]

@@ -2,7 +2,7 @@ import os
 from typing import Any
 
 import yaml
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from internal.lib.helper import dynamic_import
 from .tool_entity import ToolEntity
@@ -16,6 +16,7 @@ class ProviderEntity(BaseModel):
     icon: str
     background: str
     category: str
+    created_at: int = 0
 
 
 class Provider(BaseModel):
@@ -23,8 +24,8 @@ class Provider(BaseModel):
     name: str
     position: int
     provider_entity: ProviderEntity
-    tool_entity_map: dict[str, ToolEntity] = {}
-    tool_func_map: dict[str, Any] = {}
+    tool_entity_map: dict[str, ToolEntity] = Field(default_factory=dict)
+    tool_func_map: dict[str, Any] = Field(default_factory=dict)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
